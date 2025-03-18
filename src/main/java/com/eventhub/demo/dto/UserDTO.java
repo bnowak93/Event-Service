@@ -1,9 +1,13 @@
 package com.eventhub.demo.dto;
 
-public record UserDTO(String userName,
-        String firstName,
-        String lastName,
-        String email,
-        String phone,
-        String address) {
+import jakarta.validation.constraints.NotBlank;
+
+public record UserDTO(
+        Long id,
+        @NotBlank String userName,
+        @NotBlank String firstName,
+        @NotBlank String lastName,
+        @NotBlank String email,
+        @NotBlank String phone,
+        @NotBlank String address) {
 }

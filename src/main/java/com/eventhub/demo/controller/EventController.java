@@ -1,84 +1,57 @@
 package com.eventhub.demo.controller;
 
 import com.eventhub.demo.dto.EventDTO;
-import com.eventhub.demo.model.Event;
-import com.eventhub.demo.repository.EventRepository;
+import com.eventhub.demo.service.EventService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.net.URI;
 import java.util.List;
 
-@Controller
+@RestController
 @RequestMapping("api/events")
 @RequiredArgsConstructor
+@Validated
 public class EventController {
 
-    private final EventRepository eventRepository;
+    private final EventService service;
 
     @GetMapping
     public ResponseEntity<List<EventDTO>> getAll() {
-        List<EventDTO> events = eventRepository.findAll().stream()
-                .map(event -> new EventDTO(
-                        event.getTitle(),
-                        event.getDescription(),
-                        event.getLocation(),
-                        event.getStartTime(),
-                        event.getEndTime()))
-                .toList();
+        List<EventDTO> events = service.findAllEvents();
         return ResponseEntity.ok(events);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EventDTO> getById(@PathVariable Long id) {
-        return eventRepository.findById(id)
-                .map(event -> ResponseEntity.ok(new EventDTO(
-                        event.getTitle(),
-                        event.getDescription(),
-                        event.getLocation(),
-                        event.getStartTime(),
-                        event.getEndTime()
-                ))).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<EventDTO> getById(@NotNull @PathVariable Long id) {
+
+        return service.findEventById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<EventDTO> create(@RequestBody EventDTO eventDTO) {
-        Event event = Event.builder()
-                .title(eventDTO.title())
-                .description(eventDTO.description())
-                .location(eventDTO.location())
-                .startTime(eventDTO.startTime())
-                .endTime(eventDTO.endTime())
-                .createdAt(LocalDateTime.now())
-                .build();
-        eventRepository.save(event);
-        return ResponseEntity.status(HttpStatus.CREATED).body(eventDTO);
+    public ResponseEntity<EventDTO> create(@Valid @RequestBody EventDTO eventDTO) {
+        EventDTO createdEvent = service.createEvent(eventDTO);
+        return ResponseEntity.created(URI.create("/api/events/" + createdEvent.id())).body(createdEvent);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EventDTO> update(@PathVariable Long id, @RequestBody EventDTO updatedEvent) {
-        return eventRepository.findById(id)
-                .map(existing -> {
-                    existing.setTitle(updatedEvent.title());
-                    existing.setDescription(updatedEvent.description());
-                    existing.setLocation(updatedEvent.location());
-                    existing.setStartTime(updatedEvent.startTime());
-                    existing.setEndTime(updatedEvent.endTime());
-                    eventRepository.save(existing);
-                    return ResponseEntity.ok(updatedEvent);
-                })
+    public ResponseEntity<EventDTO> update(@NotNull @PathVariable Long id, @Valid @RequestBody EventDTO updatedEvent) {
+        return service.updateEvent(id, updatedEvent)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (!eventRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        eventRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> delete(@NotNull @PathVariable Long id) {
+        boolean deleted = service.deleteEvent(id);
+        return deleted
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 }

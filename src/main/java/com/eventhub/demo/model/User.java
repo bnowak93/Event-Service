@@ -1,10 +1,10 @@
 package com.eventhub.demo.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.List;
@@ -17,7 +17,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
+    @NotEmpty
+    @Valid
     @OneToMany(mappedBy = "organizer")
     private List<Event> events;
 
@@ -27,7 +28,7 @@ public class User {
     private String firstName;
     @NotBlank(message = "Lastname can't be blank")
     private String lastName;
-    @NotBlank()
+    @NotBlank(message = "Email can't be blank")
     @Email(message = "Wrong email format")
     private String email;
     @NotBlank(message = "Provide correct phone number")
