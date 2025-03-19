@@ -1,6 +1,7 @@
 package com.eventhub.demo.service.impl;
 
-import com.eventhub.demo.dto.EventDTO;
+import com.eventhub.demo.dto.EventRequestDTO;
+import com.eventhub.demo.dto.EventResponseDTO;
 import com.eventhub.demo.mapper.EventMapper;
 import com.eventhub.demo.model.Event;
 import com.eventhub.demo.repository.EventRepository;
@@ -24,39 +25,38 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<EventDTO> findAllEvents() {
-        return mapper.toDTOList(repository.findAll());
+    public List<EventResponseDTO> findAllEvents() {
+        return mapper.toResponseDTOList(repository.findAll());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<EventDTO> findEventById(Long id) {
-        return repository.findById(id).map(mapper::toDTO);
+    public Optional<EventResponseDTO> findEventById(Long id) {
+        return repository.findById(id).map(mapper::toResponseDTO);
     }
 
     @Override
-    public EventDTO createEvent(EventDTO dto) {
+    public EventResponseDTO createEvent(EventRequestDTO dto) {
         Event entity = mapper.toEntity(dto);
         entity.setCreatedAt(LocalDateTime.now());
 
         Event saved = repository.save(entity);
-        return mapper.toDTO(saved);
+        return mapper.toResponseDTO(saved);
     }
 
     @Override
-    public Optional<EventDTO> updateEvent(Long id, EventDTO dto) {
+    public Optional<EventResponseDTO> updateEvent(Long id, EventRequestDTO dto) {
         return repository.findById(id)
                 .map(existing -> {
                     existing.setTitle(dto.title());
                     existing.setDescription(dto.description());
-                    existing.setLocation(existing.getLocation());
-                    existing.setLocation(existing.getLocation());
-                    existing.setStartTime(existing.getStartTime());
-                    existing.setEndTime(existing.getEndTime());
+                    existing.setLocation(dto.location());
+                    existing.setStartTime(dto.startTime());
+                    existing.setEndTime(dto.endTime());
 
                     return repository.save(existing);
                 })
-                .map(mapper::toDTO);
+                .map(mapper::toResponseDTO);
     }
 
     @Override

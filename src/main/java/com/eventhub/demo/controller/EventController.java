@@ -1,6 +1,7 @@
 package com.eventhub.demo.controller;
 
-import com.eventhub.demo.dto.EventDTO;
+import com.eventhub.demo.dto.EventRequestDTO;
+import com.eventhub.demo.dto.EventResponseDTO;
 import com.eventhub.demo.service.EventService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -21,27 +22,26 @@ public class EventController {
     private final EventService service;
 
     @GetMapping
-    public ResponseEntity<List<EventDTO>> getAll() {
-        List<EventDTO> events = service.findAllEvents();
+    public ResponseEntity<List<EventResponseDTO>> getAll() {
+        List<EventResponseDTO> events = service.findAllEvents();
         return ResponseEntity.ok(events);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EventDTO> getById(@NotNull @PathVariable Long id) {
-
+    public ResponseEntity<EventResponseDTO> getById(@NotNull @PathVariable Long id) {
         return service.findEventById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<EventDTO> create(@Valid @RequestBody EventDTO eventDTO) {
-        EventDTO createdEvent = service.createEvent(eventDTO);
+    public ResponseEntity<EventResponseDTO> create(@Valid @RequestBody EventRequestDTO eventRequestDTO) {
+        EventResponseDTO createdEvent = service.createEvent(eventRequestDTO);
         return ResponseEntity.created(URI.create("/api/events/" + createdEvent.id())).body(createdEvent);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EventDTO> update(@NotNull @PathVariable Long id, @Valid @RequestBody EventDTO updatedEvent) {
+    public ResponseEntity<EventResponseDTO> update(@NotNull @PathVariable Long id, @Valid @RequestBody EventRequestDTO updatedEvent) {
         return service.updateEvent(id, updatedEvent)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

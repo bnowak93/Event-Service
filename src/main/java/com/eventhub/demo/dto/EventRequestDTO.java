@@ -6,11 +6,11 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
-public record EventDTO(
-        Long id,
+public record EventRequestDTO(
         @NotBlank String title,
         @NotBlank String description,
         @NotBlank String location,
         @NotNull @Future LocalDateTime startTime,
-        @NotNull @Future LocalDateTime endTime) {
+        @NotNull @Future LocalDateTime endTime
+) {
 }
