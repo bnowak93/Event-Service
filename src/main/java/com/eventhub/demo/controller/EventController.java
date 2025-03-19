@@ -23,32 +23,29 @@ public class EventController {
 
     @GetMapping
     public ResponseEntity<List<EventResponseDTO>> getAll() {
-        List<EventResponseDTO> events = service.findAllEvents();
-        return ResponseEntity.ok(events);
+        return ResponseEntity.ok(service.findAllEvents());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<EventResponseDTO> getById(@PathVariable Long id) {
-        EventResponseDTO event = service.findEventById(id);
-        return ResponseEntity.ok(event);
+        return ResponseEntity.ok(service.findEventById(id));
     }
 
     @PostMapping
     public ResponseEntity<EventResponseDTO> create(@Valid @RequestBody EventRequestDTO eventRequestDTO) {
         EventResponseDTO createdEvent = service.createEvent(eventRequestDTO);
-        return ResponseEntity.created(URI.create("/api/events/" + createdEvent.id())).body(createdEvent);
+        return ResponseEntity.created(URI.create("/api/events/" + createdEvent.id()))
+                .body(createdEvent);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EventResponseDTO> update(@NotNull @PathVariable Long id, @Valid @RequestBody EventRequestDTO updatedEvent) {
-
+    public ResponseEntity<EventResponseDTO> update(@PathVariable Long id, @Valid @RequestBody EventRequestDTO updatedEvent) {
+        return ResponseEntity.ok(service.updateEvent(id, updatedEvent));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@NotNull @PathVariable Long id) {
-        boolean deleted = service.deleteEvent(id);
-        return deleted
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+        service.deleteEvent(id);
+        return ResponseEntity.noContent().build();
     }
 }

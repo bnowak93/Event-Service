@@ -2,6 +2,7 @@ package com.eventhub.demo.service.impl;
 
 import com.eventhub.demo.dto.EventRequestDTO;
 import com.eventhub.demo.dto.EventResponseDTO;
+import com.eventhub.demo.exception.ErrorMessages;
 import com.eventhub.demo.exception.InvalidEventDateException;
 import com.eventhub.demo.exception.ResourceNotFoundException;
 import com.eventhub.demo.mapper.EventMapper;
@@ -34,14 +35,21 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     public EventResponseDTO findEventById(Long id) {
         return repository.findById(id).map(mapper::toResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Event", id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        String.format(ErrorMessages.EVENT_NOT_FOUND, id)
+                ));
     }
 
     @Override
     public EventResponseDTO createEvent(EventRequestDTO dto) {
-        if (dto.endTime().isBefore(dto.startTime())) {
-            throw new InvalidEventDateException("Event end date must be after start date");
+        if (dto.startTime().isBefore(LocalDateTime.now())) {
+            throw new InvalidEventDateException(ErrorMessages.EVENT_START_IN_PAST);
         }
+
+        if (dto.endTime().isBefore(dto.startTime())) {
+            throw new InvalidEventDateException(ErrorMessages.EVENT_END_BEFORE_START);
+        }
+
         Event entity = mapper.toEntity(dto);
         entity.setCreatedAt(LocalDateTime.now());
 
@@ -52,11 +60,19 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventResponseDTO updateEvent(Long id, EventRequestDTO dto) {
-        if (dto.endTime().isBefore(dto.startTime())) {
-            throw new InvalidEventDateException("Event end date must be after start date");
+        if (dto.startTime().isBefore(LocalDateTime.now())) {
+            throw new InvalidEventDateException(ErrorMessages.EVENT_START_IN_PAST);
         }
+
+        if (dto.endTime().isBefore(dto.startTime())) {
+            throw new InvalidEventDateException(ErrorMessages.EVENT_END_BEFORE_START);
+        }
+
         Event event = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Event", id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        String.format(ErrorMessages.EVENT_NOT_FOUND, id)
+                ));
+
         event.setTitle(dto.title());
         event.setDescription(dto.description());
         event.setLocation(dto.location());
@@ -72,7 +88,9 @@ public class EventServiceImpl implements EventService {
     @Override
     public boolean deleteEvent(Long id) {
         if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("Event", id);
+            throw new ResourceNotFoundException(
+                    String.format(ErrorMessages.EVENT_NOT_FOUND, id)
+            );
         }
         repository.deleteById(id);
         log.info("Deleted event with ID: {}", id);
