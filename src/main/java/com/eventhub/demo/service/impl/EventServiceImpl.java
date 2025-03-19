@@ -2,6 +2,8 @@ package com.eventhub.demo.service.impl;
 
 import com.eventhub.demo.dto.EventRequestDTO;
 import com.eventhub.demo.dto.EventResponseDTO;
+import com.eventhub.demo.exception.InvalidEventDateException;
+import com.eventhub.demo.exception.ResourceNotFoundException;
 import com.eventhub.demo.mapper.EventMapper;
 import com.eventhub.demo.model.Event;
 import com.eventhub.demo.repository.EventRepository;
@@ -13,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -31,40 +32,50 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<EventResponseDTO> findEventById(Long id) {
-        return repository.findById(id).map(mapper::toResponseDTO);
+    public EventResponseDTO findEventById(Long id) {
+        return repository.findById(id).map(mapper::toResponseDTO)
+                .orElseThrow(() -> new ResourceNotFoundException("Event", id));
     }
 
     @Override
     public EventResponseDTO createEvent(EventRequestDTO dto) {
+        if (dto.endTime().isBefore(dto.startTime())) {
+            throw new InvalidEventDateException("Event end date must be after start date");
+        }
         Event entity = mapper.toEntity(dto);
         entity.setCreatedAt(LocalDateTime.now());
 
         Event saved = repository.save(entity);
+        log.info("Created event with id: {}", saved.getId());
         return mapper.toResponseDTO(saved);
     }
 
     @Override
-    public Optional<EventResponseDTO> updateEvent(Long id, EventRequestDTO dto) {
-        return repository.findById(id)
-                .map(existing -> {
-                    existing.setTitle(dto.title());
-                    existing.setDescription(dto.description());
-                    existing.setLocation(dto.location());
-                    existing.setStartTime(dto.startTime());
-                    existing.setEndTime(dto.endTime());
+    public EventResponseDTO updateEvent(Long id, EventRequestDTO dto) {
+        if (dto.endTime().isBefore(dto.startTime())) {
+            throw new InvalidEventDateException("Event end date must be after start date");
+        }
+        Event event = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Event", id));
+        event.setTitle(dto.title());
+        event.setDescription(dto.description());
+        event.setLocation(dto.location());
+        event.setStartTime(dto.startTime());
+        event.setEndTime(dto.endTime());
 
-                    return repository.save(existing);
-                })
-                .map(mapper::toResponseDTO);
+        Event updated = repository.save(event);
+        log.info("Updated event with ID: {}", id);
+
+        return mapper.toResponseDTO(updated);
     }
 
     @Override
     public boolean deleteEvent(Long id) {
-        if (repository.existsById(id)) {
-            repository.deleteById(id);
-            return true;
+        if (!repository.existsById(id)) {
+            throw new ResourceNotFoundException("Event", id);
         }
-        return false;
+        repository.deleteById(id);
+        log.info("Deleted event with ID: {}", id);
+        return true;
     }
 }
