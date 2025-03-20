@@ -1,6 +1,5 @@
 package com.eventhub.demo.validation;
 
-import com.eventhub.demo.exception.ErrorMessages;
 import com.eventhub.demo.validation.impl.EventDateValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

@@ -44,6 +44,11 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
 
+    // Swagger
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
+//    implementation("org.springdoc:springdoc-openapi-common:1.8.0")
+//    implementation("org.springdoc:springdoc-openapi-webmvc-core:1.8.0")
+
     // Postgres
     runtimeOnly("org.postgresql:postgresql")
 
