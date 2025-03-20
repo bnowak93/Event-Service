@@ -9,8 +9,10 @@ import com.eventhub.demo.mapper.EventMapper;
 import com.eventhub.demo.model.Event;
 import com.eventhub.demo.repository.EventRepository;
 import com.eventhub.demo.service.EventService;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,13 +22,19 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 @Transactional
 public class EventServiceImpl implements EventService {
     private final EventRepository repository;
     private final EventMapper mapper;
     private final UserServiceMock userService;
+
+    @Autowired
+    public EventServiceImpl(EventRepository repository, @Qualifier("eventMapperImpl") EventMapper mapper, UserServiceMock userService) {
+        this.repository = repository;
+        this.mapper = mapper;
+        this.userService = userService;
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -50,15 +58,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventResponseDTO createEvent(EventRequestDTO dto) {
-        if (dto.startTime().isBefore(LocalDateTime.now())) {
-            throw new InvalidEventDateException(ErrorMessages.EVENT_START_IN_PAST);
-        }
-
-        if (dto.endTime().isBefore(dto.startTime())) {
-            throw new InvalidEventDateException(ErrorMessages.EVENT_END_BEFORE_START);
-        }
-
+    public EventResponseDTO createEvent(@NotNull EventRequestDTO dto) {
         Event entity = mapper.toEntity(dto);
         entity.setCreatedAt(LocalDateTime.now());
 
@@ -68,15 +68,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventResponseDTO updateEvent(Long id, EventRequestDTO dto) {
-        if (dto.startTime().isBefore(LocalDateTime.now())) {
-            throw new InvalidEventDateException(ErrorMessages.EVENT_START_IN_PAST);
-        }
-
-        if (dto.endTime().isBefore(dto.startTime())) {
-            throw new InvalidEventDateException(ErrorMessages.EVENT_END_BEFORE_START);
-        }
-
+    public EventResponseDTO updateEvent(@NotNull Long id, @NotNull EventRequestDTO dto) {
         Event event = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         String.format(ErrorMessages.EVENT_NOT_FOUND, id)
