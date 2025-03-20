@@ -11,6 +11,8 @@ import com.eventhub.demo.repository.EventRepository;
 import com.eventhub.demo.service.EventService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,11 +26,18 @@ import java.util.List;
 public class EventServiceImpl implements EventService {
     private final EventRepository repository;
     private final EventMapper mapper;
+    private final UserServiceMock userService;
 
     @Override
     @Transactional(readOnly = true)
     public List<EventResponseDTO> findAllEvents() {
         return mapper.toResponseDTOList(repository.findAll());
+    }
+
+    @Override
+    public Page<EventResponseDTO> findAllEvents(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(mapper::toResponseDTO);
     }
 
     @Override

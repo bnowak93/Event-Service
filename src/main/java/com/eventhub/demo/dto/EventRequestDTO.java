@@ -11,6 +11,7 @@ public record EventRequestDTO(
         @NotBlank String description,
         @NotBlank String location,
         @NotNull @Future LocalDateTime startTime,
-        @NotNull @Future LocalDateTime endTime
+        @NotNull @Future LocalDateTime endTime,
+        Long organizerId
 ) {
 }

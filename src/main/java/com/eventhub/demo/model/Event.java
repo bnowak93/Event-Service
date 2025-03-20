@@ -24,11 +24,8 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Valid
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="user_id", referencedColumnName = "id")
-    private User organizer;
-
+    @Column(name="organizer_id")
+    private Long organizerId;
     @NotBlank(message = "Title can't be blank")
     private String title;
     @NotBlank(message = "Please provide description")

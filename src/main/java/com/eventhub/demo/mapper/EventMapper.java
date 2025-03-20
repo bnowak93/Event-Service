@@ -14,8 +14,10 @@ public interface EventMapper {
     @Mapping(target = "id", ignore = true)
     Event toEntity(EventRequestDTO eventRequestDTO);
 
+    @Mapping(target = "organizerName", ignore = true)
     EventResponseDTO toResponseDTO(Event event);
 
+    @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     List<Event> toEntityList(List<EventResponseDTO> eventResponseDTOList);
 
     List<EventResponseDTO> toResponseDTOList(List<Event> events);

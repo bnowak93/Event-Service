@@ -6,6 +6,10 @@ import com.eventhub.demo.service.EventService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +28,21 @@ public class EventController {
     @GetMapping
     public ResponseEntity<List<EventResponseDTO>> getAll() {
         return ResponseEntity.ok(service.findAllEvents());
+    }
+
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<EventResponseDTO>> getAllPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "startTime") String sort,
+            @RequestParam(defaultValue = "asc") String direction) {
+        Sort.Direction sortDirection = direction.equals("desc") ?
+                Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+        Page<EventResponseDTO> events = service.findAllEvents(pageable);
+
+        return ResponseEntity.ok(events);
     }
 
     @GetMapping("/{id}")

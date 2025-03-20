@@ -2,15 +2,22 @@ package com.eventhub.demo.service;
 
 import com.eventhub.demo.dto.EventRequestDTO;
 import com.eventhub.demo.dto.EventResponseDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface EventService {
 
-    public List<EventResponseDTO> findAllEvents();
-    public EventResponseDTO findEventById(Long id);
-    public EventResponseDTO createEvent(EventRequestDTO dto);
-    public EventResponseDTO updateEvent(Long id, EventRequestDTO dto);
-    public boolean deleteEvent(Long id);
+    List<EventResponseDTO> findAllEvents();
+
+    Page<EventResponseDTO> findAllEvents(Pageable pageable);
+
+    EventResponseDTO findEventById(Long id);
+
+    EventResponseDTO createEvent(EventRequestDTO dto);
+
+    EventResponseDTO updateEvent(Long id, EventRequestDTO dto);
+
+    boolean deleteEvent(Long id);
 }

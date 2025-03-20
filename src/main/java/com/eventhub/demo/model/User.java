@@ -17,10 +17,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotEmpty
-    @Valid
-    @OneToMany(mappedBy = "organizer")
-    private List<Event> events;
+//    @NotEmpty
+//    @Valid
+//    @OneToMany(mappedBy = "organizer")
+//    private List<Event> events;
 
     @NotBlank(message = "Username can't be blank")
     private String userName;
