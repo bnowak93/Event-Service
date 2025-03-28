@@ -22,7 +22,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -43,7 +43,7 @@ class EventControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.of(2025, 12, 22, 12, 30);
         LocalDateTime future = now.plusDays(1);
 
         eventResponseDTO = new EventResponseDTO(
@@ -97,5 +97,63 @@ class EventControllerIntegrationTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.content[0].id", is(1)))
                 .andExpect(jsonPath("$.content[0].title", is("Test Event")));
+    }
+
+    @Test
+    @WithMockUser
+    void getById_shouldReturnEvent() throws Exception {
+        // Given
+        when(eventService.findEventById(1L)).thenReturn(eventResponseDTO);
+
+        // When & Then
+        mockMvc.perform(get("/api/events/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.title", is("Test Event")));
+    }
+
+    @Test
+    @WithMockUser
+    void create_shouldCreateEvent() throws Exception {
+        // Given
+        when(eventService.createEvent(any(EventRequestDTO.class))).thenReturn(eventResponseDTO);
+
+        // When & Then
+        mockMvc.perform(post("/api/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(eventRequestDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.title", is("Test Event")));
+    }
+
+    @Test
+    @WithMockUser
+    void update_shouldUpdateEvent() throws Exception {
+        // Given
+        when(eventService.updateEvent(1L, eventRequestDTO)).thenReturn(eventResponseDTO);
+
+        // When & Then
+        mockMvc.perform(put("/api/events/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(eventRequestDTO)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.title", is("Test Event")));
+
+    }
+
+    @Test
+    @WithMockUser
+    void delete_shouldReturnNoContent() throws Exception {
+        // Given
+        when(eventService.deleteEvent(1L)).thenReturn(true);
+
+        // When & Then
+        mockMvc.perform(delete("/api/events/1"))
+                .andExpect(status().isNoContent());
     }
 }
