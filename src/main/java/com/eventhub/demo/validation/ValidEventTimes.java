@@ -10,8 +10,8 @@ import java.lang.annotation.*;
 @Constraint(validatedBy = EventDateValidator.class)
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ValidEventDates {
-    String message() default "Event end time is incorrect";
+public @interface ValidEventTimes {
+    String message() default "Event end time must be after start time";
     Class<?>[] groups() default{};
     Class<? extends Payload>[] payload() default {};
 }
