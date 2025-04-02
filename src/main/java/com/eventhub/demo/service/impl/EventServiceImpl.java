@@ -2,6 +2,10 @@ package com.eventhub.demo.service.impl;
 
 import com.eventhub.demo.dto.EventRequestDTO;
 import com.eventhub.demo.dto.EventResponseDTO;
+import com.eventhub.demo.event.EventCreatedEvent;
+import com.eventhub.demo.event.EventDeletedEvent;
+import com.eventhub.demo.event.EventPublisher;
+import com.eventhub.demo.event.EventUpdatedEvent;
 import com.eventhub.demo.exception.ErrorMessages;
 import com.eventhub.demo.exception.ResourceNotFoundException;
 import com.eventhub.demo.mapper.EventMapper;
@@ -31,17 +35,20 @@ public class EventServiceImpl implements EventService {
     private final EventMapper mapper;
     private final UserServiceMock userService;
     private final EventServiceMetrics metrics;
+    private final EventPublisher eventPublisher;
 
     @Autowired
     public EventServiceImpl(EventRepository repository,
                             @Qualifier("eventMapperImpl") EventMapper mapper,
                             UserServiceMock userService,
-                            EventServiceMetrics metrics
+                            EventServiceMetrics metrics,
+                            EventPublisher eventPublisher
     ) {
         this.repository = repository;
         this.mapper = mapper;
         this.userService = userService;
         this.metrics = metrics;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -82,6 +89,18 @@ public class EventServiceImpl implements EventService {
         metrics.recordEventCreationTime(duration);
         metrics.recordEventCreated();
 
+        // Publish event
+        eventPublisher.publishEventCreated(new EventCreatedEvent(
+                saved.getId(),
+                saved.getTitle(),
+                saved.getDescription(),
+                saved.getLocation(),
+                saved.getStartTime(),
+                saved.getEndTime(),
+                saved.getOrganizerId(),
+                saved.getCreatedAt()
+        ));
+
         log.info("Created event with id: {}", saved.getId());
         return mapper.toResponseDTO(saved);
     }
@@ -105,6 +124,18 @@ public class EventServiceImpl implements EventService {
         // Record metrics
         metrics.recordEventUpdated();
 
+        // Publish event
+        eventPublisher.publishEventUpdated(new EventUpdatedEvent(
+                updated.getId(),
+                updated.getTitle(),
+                updated.getDescription(),
+                updated.getLocation(),
+                updated.getStartTime(),
+                updated.getEndTime(),
+                updated.getOrganizerId(),
+                LocalDateTime.now()
+        ));
+
         log.info("Updated event with ID: {}", id);
 
         return mapper.toResponseDTO(updated);
@@ -122,6 +153,12 @@ public class EventServiceImpl implements EventService {
 
         // Record metrics
         metrics.recordEventDeleted();
+
+        // Publish event
+        eventPublisher.publishEventDeleted(new EventDeletedEvent(
+                id,
+                LocalDateTime.now()
+        ));
 
         log.info("Deleted event with ID: {}", id);
         return true;
