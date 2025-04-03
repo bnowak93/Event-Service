@@ -83,7 +83,6 @@ public class EventPublisher {
                           event,
                           ex.getMessage()
                 );
-
             }
         });
     }
