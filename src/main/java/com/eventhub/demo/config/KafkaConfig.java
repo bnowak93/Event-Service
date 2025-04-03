@@ -33,24 +33,24 @@ public class KafkaConfig {
     @Bean
     public NewTopic eventCreatedTopic() {
         return TopicBuilder.name(eventCreatedTopic)
-                .partitions(3)
-                .replicas(2)
+                .partitions(6)
+                .replicas(3)
                 .build();
     }
 
     @Bean
     public NewTopic eventUpdatedTopic() {
         return TopicBuilder.name(eventUpdatedTopic)
-                .partitions(3)
-                .replicas(2)
+                .partitions(6)
+                .replicas(3)
                 .build();
     }
 
     @Bean
     public NewTopic eventDeletedTopic() {
         return TopicBuilder.name(eventDeletedTopic)
-                .partitions(3)
-                .replicas(2)
+                .partitions(6)
+                .replicas(3)
                 .build();
     }
 
