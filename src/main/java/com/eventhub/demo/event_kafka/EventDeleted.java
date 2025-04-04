@@ -1,8 +1,8 @@
-package com.eventhub.demo.event;
+package com.eventhub.demo.event_kafka;
 
 import java.time.LocalDateTime;
 
-public record EventDeletedEvent(
+public record EventDeleted(
         Long eventId,
         LocalDateTime deletedAt
 ) {

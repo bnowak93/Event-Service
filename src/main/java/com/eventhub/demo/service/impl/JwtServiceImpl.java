@@ -1,6 +1,6 @@
 package com.eventhub.demo.service.impl;
 
-import com.eventhub.demo.security.config.JwtProperties;
+import com.eventhub.demo.config.security.JwtProperties;
 import com.eventhub.demo.service.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

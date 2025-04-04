@@ -1,8 +1,8 @@
-package com.eventhub.demo.event;
+package com.eventhub.demo.event_kafka;
 
 import java.time.LocalDateTime;
 
-public record EventCreatedEvent(
+public record EventCreated(
         Long eventId,
         String title,
         String description,

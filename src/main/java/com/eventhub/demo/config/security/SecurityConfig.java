@@ -1,4 +1,4 @@
-package com.eventhub.demo.security.config;
+package com.eventhub.demo.config.security;
 
 import com.eventhub.demo.security.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;

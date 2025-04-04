@@ -2,6 +2,7 @@ plugins {
     java
     id("org.springframework.boot") version "3.4.3"
     id("io.spring.dependency-management") version "1.1.7"
+    id("org.flywaydb.flyway") version "10.8.1"
 }
 
 group = "com.eventhub"
@@ -21,6 +22,12 @@ configurations {
 
 repositories {
     mavenCentral()
+}
+
+flyway {
+    url = "jdbc:postgresql://localhost:5432/postgres"
+    user = "postgres"
+    password = "Asakura12211@"
 }
 
 dependencies {
@@ -62,8 +69,6 @@ dependencies {
 
     // Swagger
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
-//    implementation("org.springdoc:springdoc-openapi-common:1.8.0")
-//    implementation("org.springdoc:springdoc-openapi-webmvc-core:1.8.0")
 
     // Postgres
     runtimeOnly("org.postgresql:postgresql")

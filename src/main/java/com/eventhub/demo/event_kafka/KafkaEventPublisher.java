@@ -1,4 +1,4 @@
-package com.eventhub.demo.event;
+package com.eventhub.demo.event_kafka;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class EventPublisher {
+public class KafkaEventPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -25,7 +25,7 @@ public class EventPublisher {
     @Value("${app.kafka.topics.event-deleted}")
     private String eventDeletedTopic;
 
-    public void publishEventCreated(EventCreatedEvent event) {
+    public void publishEventCreated(EventCreated event) {
         String key = event.eventId().toString();
         log.info("Publishing event created: {}", key);
         CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(eventCreatedTopic, key, event);
@@ -42,12 +42,10 @@ public class EventPublisher {
                           ex.getMessage()
                 );
             }
-
-
         });
     }
 
-    public void publishEventUpdated(EventUpdatedEvent event) {
+    public void publishEventUpdated(EventUpdated event) {
         String key = event.eventId().toString();
         log.info("Publishing event updated: {}", key);
         CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(eventUpdatedTopic, key, event);
@@ -67,7 +65,7 @@ public class EventPublisher {
         });
     }
 
-    public void publishEventDeleted(EventDeletedEvent event) {
+    public void publishEventDeleted(EventDeleted event) {
         String key = event.eventId().toString();
         log.info("Publishing event deleted: {}", key);
         CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(eventDeletedTopic, key, event);
