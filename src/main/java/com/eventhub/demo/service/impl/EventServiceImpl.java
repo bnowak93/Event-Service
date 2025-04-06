@@ -1,5 +1,6 @@
 package com.eventhub.demo.service.impl;
 
+import com.eventhub.demo.client.UserServiceClient;
 import com.eventhub.demo.dto.EventRequestDTO;
 import com.eventhub.demo.dto.EventResponseDTO;
 import com.eventhub.demo.event_kafka.EventCreated;
@@ -33,20 +34,20 @@ import java.util.List;
 public class EventServiceImpl implements EventService {
     private final EventRepository repository;
     private final EventMapper mapper;
-    private final UserServiceMock userService;
+    private final UserServiceClient userServiceClient;
     private final EventServiceMetrics metrics;
     private final OutboxService outboxService;
 
     @Autowired
     public EventServiceImpl(EventRepository repository,
                             @Qualifier("eventMapperImpl") EventMapper mapper,
-                            UserServiceMock userService,
+                            UserServiceClient userServiceClient,
                             EventServiceMetrics metrics,
                             OutboxService outboxService
     ) {
         this.repository = repository;
         this.mapper = mapper;
-        this.userService = userService;
+        this.userServiceClient = userServiceClient;
         this.metrics = metrics;
         this.outboxService = outboxService;
     }
@@ -55,24 +56,35 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     public List<EventResponseDTO> findAllEvents() {
         log.debug("Finding all events");
-        return mapper.toResponseDTOList(repository.findAll());
+        List<Event> events = repository.findAll();
+        List<EventResponseDTO> dtos = mapper.toResponseDTOList(events);
+
+        // Enhance DTOs with organizer names from User Service
+        dtos.forEach(this::enrichWithOrganizerInfo);
+
+        return dtos;
     }
 
     @Override
     public Page<EventResponseDTO> findAllEvents(Pageable pageable) {
         log.debug("Finding events with pagination {}", pageable);
         return repository.findAll(pageable)
-                .map(mapper::toResponseDTO);
+                .map(event -> {
+                    EventResponseDTO dto = mapper.toResponseDTO(event);
+                    return enrichWithOrganizerInfo(dto);
+                });
     }
 
     @Override
     @Transactional(readOnly = true)
     public EventResponseDTO findEventById(Long id) {
         log.debug("Finding event with id {}", id);
-        return repository.findById(id).map(mapper::toResponseDTO)
+        EventResponseDTO dto = repository.findById(id)
+                .map(mapper::toResponseDTO)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         String.format(ErrorMessages.EVENT_NOT_FOUND, id)
                 ));
+        return enrichWithOrganizerInfo(dto);
     }
 
     @Override
@@ -99,20 +111,9 @@ public class EventServiceImpl implements EventService {
                 eventCreated
         );
 
-        // Publish event
-//        eventPublisher.publishEventCreated(new EventCreatedEvent(
-//                saved.getId(),
-//                saved.getTitle(),
-//                saved.getDescription(),
-//                saved.getLocation(),
-//                saved.getStartTime(),
-//                saved.getEndTime(),
-//                saved.getOrganizerId(),
-//                saved.getCreatedAt()
-//        ));
-
         log.info("Created event with id: {}", saved.getId());
-        return mapper.toResponseDTO(saved);
+        EventResponseDTO responseDTO = mapper.toResponseDTO(saved);
+        return enrichWithOrganizerInfo(responseDTO);
     }
 
     @Override
@@ -145,21 +146,11 @@ public class EventServiceImpl implements EventService {
                 eventUpdated
         );
 
-//        // Publish event
-//        kafkaEventPublisher.publishEventUpdated(new EventUpdated(
-//                updated.getId(),
-//                updated.getTitle(),
-//                updated.getDescription(),
-//                updated.getLocation(),
-//                updated.getStartTime(),
-//                updated.getEndTime(),
-//                updated.getOrganizerId(),
-//                LocalDateTime.now()
-//        ));
-
         log.info("Updated event with ID: {}", id);
 
-        return mapper.toResponseDTO(updated);
+        EventResponseDTO responseDTO = mapper.toResponseDTO(updated);
+
+        return enrichWithOrganizerInfo(responseDTO);
     }
 
     @Override
@@ -186,14 +177,32 @@ public class EventServiceImpl implements EventService {
                 eventDeleted
         );
 
-//         Publish event
-//        kafkaEventPublisher.publishEventDeleted(new EventDeleted(
-//                id,
-//                LocalDateTime.now()
-//        ));
-
         log.info("Deleted event with ID: {}", id);
         return true;
+    }
+
+    /**
+     * Enriches the event DTO with organizer information from the User Service
+     *
+     * @param dto event response DTO
+     * @return response DTO with organizer username if found else return dto without changes
+     */
+    private EventResponseDTO enrichWithOrganizerInfo(EventResponseDTO dto) {
+        if (dto.organizerId() != null) {
+            String organizerName = userServiceClient.getUserName(dto.organizerId());
+
+            return new EventResponseDTO(
+                    dto.id(),
+                    dto.title(),
+                    dto.description(),
+                    dto.location(),
+                    dto.startTime(),
+                    dto.endTime(),
+                    dto.organizerId(),
+                    organizerName
+            );
+        }
+        return dto;
     }
 
 }

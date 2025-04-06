@@ -24,6 +24,8 @@ repositories {
     mavenCentral()
 }
 
+extra["springCloudVersion"] = "2024.0.0"
+
 flyway {
     url = "jdbc:postgresql://localhost:5432/postgres"
     user = "postgres"
@@ -40,6 +42,13 @@ dependencies {
 
     // Spring Security
     implementation("org.springframework.boot:spring-boot-starter-security")
+
+    // Spring Cloud - Service Discovery
+    implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client:4.2.1")
+
+    // API Gateway Integration
+    implementation("org.springframework.cloud:spring-cloud-starter:4.2.1")
+    implementation("org.springframework.cloud:spring-cloud-commons:4.2.1")
 
     // Monitoring and Observability (Spring Actuator)
     implementation("org.springframework.boot:spring-boot-starter-actuator")
