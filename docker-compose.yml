@@ -1,0 +1,169 @@
+version : '3.8'
+
+services:
+  # Event Service Application
+  event-service:
+    build: .
+    container_name: event-service
+    ports:
+      - "8081:8080"
+    environment:
+      # Database connection
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/eventhub
+      - SPRING_DATASOURCE_USERNAME:postgres
+      - SPRING_DATASOURCE_PASSWORD:Asakura12211@
+      # Eureka service discovery
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://discovery-server:8761/eureka/
+      - SPRING_APPLICATION_NAME=event-service
+      # Kafka configuration
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      # Additional configuration
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8080
+      - LOGGING_LEVEL_COM_EVENTHUB=DEBUG
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - eventhub-network
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: event-service-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=eventhub
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=Asakura12211@
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eventhub-network
+    restart: unless-stopped
+
+  # Kafka with KRaft mode (no Zookeeper)
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: event-service-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=controller, broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_KRAFT_CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - kafka-data:/bitnami/kafka
+    networks:
+      - eventhub-network
+    restart: unless-stopped
+
+  # Service Discovery (Eureka Server)
+  discovery-server:
+    image: steeltoeoss/eureka-server:latest
+    container_name: discovery-server
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - eventhub-network
+    restart: unless-stopped
+
+  # Dashboard for Kafka monitoring
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: event-service-kafka-ui
+    ports:
+      - "8080:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - eventhub-network
+    restart: unless-stopped
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: event-service-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - event-service
+    networks:
+      - eventhub-network
+    restart: unless-stopped
+
+  # Grafana for metrics visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: event-service-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+    networks:
+      - eventhub-network
+    restart: unless-stopped
+
+networks:
+  eventhub-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  kafka-data:
+  prometheus-data:
+  grafana-data:

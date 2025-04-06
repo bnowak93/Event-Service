@@ -1,0 +1,46 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Build directories and files
+build/tmp/
+build/reports/
+build/test-results/
+build/generated/
+build/resources/
+
+# Gradle
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse
+.settings/
+.project
+.classpath
+
+# VS Code
+.vscode/
+
+# Logs
+logs/
+*.log
+
+# Test directories
+src/test/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Docker specific
+Dockerfile
+docker-compose.yml
