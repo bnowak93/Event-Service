@@ -27,7 +27,7 @@ repositories {
 extra["springCloudVersion"] = "2024.0.0"
 
 flyway {
-    url = "jdbc:postgresql://localhost:5432/postgres"
+    url = "jdbc:postgresql://localhost:5432/eventhub"
     user = "postgres"
     password = "Asakura12211@"
 }

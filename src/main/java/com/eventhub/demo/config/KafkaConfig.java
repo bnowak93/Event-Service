@@ -34,7 +34,7 @@ public class KafkaConfig {
     public NewTopic eventCreatedTopic() {
         return TopicBuilder.name(eventCreatedTopic)
                 .partitions(6)
-                .replicas(2)
+                .replicas(1)
                 .build();
     }
 
@@ -42,7 +42,7 @@ public class KafkaConfig {
     public NewTopic eventUpdatedTopic() {
         return TopicBuilder.name(eventUpdatedTopic)
                 .partitions(6)
-                .replicas(2)
+                .replicas(1)
                 .build();
     }
 
@@ -50,7 +50,7 @@ public class KafkaConfig {
     public NewTopic eventDeletedTopic() {
         return TopicBuilder.name(eventDeletedTopic)
                 .partitions(6)
-                .replicas(2)
+                .replicas(1)
                 .build();
     }
 
